@@ -1,24 +1,213 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Submit Complaint</title>
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<title>Submit Complaint - CivicFix</title>
+
+<link rel="stylesheet" href="style.css">
+
+<style>
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background: #f4f6fb;
+}
+
+/* NAVBAR */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  padding: 20px 40px;
+  background: white;
+}
+
+.logo {
+  font-weight: bold;
+}
+
+/* FORM */
+.container {
+  max-width: 600px;
+  margin: 40px auto;
+  background: white;
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+
+h2 {
+  margin-bottom: 20px;
+}
+
+input, textarea {
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+}
+
+textarea {
+  height: 100px;
+}
+
+/* UPLOAD BOX */
+.upload-box {
+  border: 2px dashed #ccc;
+  padding: 30px;
+  text-align: center;
+  border-radius: 10px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.upload-box:hover {
+  background: #f9fafb;
+}
+
+.preview {
+  width: 100%;
+  margin-top: 10px;
+  border-radius: 10px;
+}
+
+/* BUTTON */
+button {
+  margin-top: 20px;
+  width: 100%;
+  padding: 12px;
+  border: none;
+  background: black;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* AI BOX */
+.ai-box {
+  margin-top: 20px;
+  padding: 15px;
+  background: #f1f5ff;
+  border-radius: 10px;
+  display: none;
+}
+</style>
 </head>
+
 <body>
 
+<!-- NAVBAR -->
+<div class="navbar">
+  <div class="logo">CivicFix</div>
+  <button onclick="window.location.href='index.html'">Home</button>
+</div>
+
+<!-- FORM -->
 <div class="container">
   <h2>Submit Civic Complaint</h2>
 
-  <input type="file" id="image"><br><br>
-  <input type="text" id="title" placeholder="Complaint Title"><br><br>
-  <textarea id="description" placeholder="Description"></textarea><br><br>
-  <input type="text" id="location" placeholder="Location"><br><br>
-  <input type="text" id="name" placeholder="Your Name"><br><br>
-  <input type="text" id="contact" placeholder="Contact Number"><br><br>
+  <!-- IMAGE -->
+  <div class="upload-box" onclick="document.getElementById('image').click()">
+    Click to upload photo
+  </div>
+  <input type="file" id="image" hidden>
 
-  <button onclick="submitComplaint()">Submit</button>
+  <img id="preview" class="preview" style="display:none;">
+
+  <!-- FIELDS -->
+  <input type="text" id="title" placeholder="Complaint Title">
+  <textarea id="description" placeholder="Describe the issue"></textarea>
+  <input type="text" id="location" placeholder="Location">
+  <input type="text" id="name" placeholder="Your Name">
+  <input type="text" id="contact" placeholder="Contact Number">
+
+  <!-- AI INFO -->
+  <div class="ai-box" id="aiBox"></div>
+
+  <button onclick="submitComplaint()">Submit Complaint</button>
 </div>
 
-<script src="script.js"></script>
+<script>
+
+// STORAGE FUNCTIONS
+function getComplaints(){
+  return JSON.parse(localStorage.getItem("complaints")) || [];
+}
+
+function saveComplaints(data){
+  localStorage.setItem("complaints", JSON.stringify(data));
+}
+
+// IMAGE PREVIEW
+let imageData = "";
+
+document.getElementById("image").addEventListener("change", function(e){
+  const file = e.target.files[0];
+
+  if(file){
+    const reader = new FileReader();
+
+    reader.onload = function(event){
+      imageData = event.target.result;
+
+      const img = document.getElementById("preview");
+      img.src = imageData;
+      img.style.display = "block";
+    };
+
+    reader.readAsDataURL(file);
+  }
+});
+
+// MOCK AI
+function generateAI(){
+  const categories = ["Water Issue", "Garbage", "Road Damage"];
+  const category = categories[Math.floor(Math.random()*categories.length)];
+
+  return {
+    category,
+    aiConfidence: Math.floor(Math.random()*20)+80,
+    estimatedTime: "1-2 days",
+    priority: Math.random()>0.7 ? "Critical" : "Normal",
+    status: "Pending"
+  };
+}
+
+// SUBMIT
+function submitComplaint(){
+
+  const ai = generateAI();
+
+  const complaint = {
+    title: document.getElementById("title").value,
+    description: document.getElementById("description").value,
+    location: document.getElementById("location").value,
+    name: document.getElementById("name").value,
+    contact: document.getElementById("contact").value,
+    image: imageData,
+    ...ai
+  };
+
+  // SHOW AI INFO
+  document.getElementById("aiBox").style.display = "block";
+  document.getElementById("aiBox").innerHTML = `
+    <b>AI Analysis:</b><br>
+    Category: ${ai.category}<br>
+    Confidence: ${ai.aiConfidence}%<br>
+    Estimated Time: ${ai.estimatedTime}
+  `;
+
+  setTimeout(()=>{
+    let data = getComplaints();
+    data.push(complaint);
+    saveComplaints(data);
+
+    alert("Complaint Submitted Successfully!");
+    window.location.href = "dashboard.html";
+  }, 1500);
+}
+
+</script>
+
 </body>
 </html>
